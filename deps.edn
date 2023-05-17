@@ -1,0 +1,35 @@
+{:paths ["src" "resources"]
+ :deps
+ {ch.qos.logback/logback-classic {:mvn/version "1.2.11"}
+  ;com.google.guava/guava {:mvn/version "31.1-jre"} ; force guava to latest to fix shadow issue
+  com.hyperfiddle/electric {:mvn/version "v2-alpha-263-g89da9d11"}
+  com.hyperfiddle/rcf {:mvn/version "20220926-202227"}
+  com.datomic/peer {:mvn/version "1.0.6726"}
+  info.sunng/ring-jetty9-adapter
+  {:mvn/version "0.14.3" ; (Jetty 9) is Java 8 compatible;
+   ;:mvn/version "0.17.7" ; (Jetty 10) is NOT Java 8 compatible
+   :exclusions [org.slf4j/slf4j-api info.sunng/ring-jetty9-adapter-http3]} ; no need
+  missionary/missionary {:mvn/version "b.27-SNAPSHOT"}
+  org.clojure/clojure {:mvn/version "1.11.1"}
+  org.clojure/clojurescript {:mvn/version "1.11.60"}
+  org.clojure/tools.logging {:mvn/version "1.2.4"}
+  org.slf4j/slf4j-api {:mvn/version "1.7.30"}
+  ring-basic-authentication/ring-basic-authentication {:mvn/version "1.1.1"}}
+
+ :aliases
+ {:dev
+  {:extra-deps
+   {binaryage/devtools {:mvn/version "1.0.6"}
+    thheller/shadow-cljs {:mvn/version "2.20.1"}}
+   :jvm-opts
+   ["-Xss2m" ; https://github.com/hyperfiddle/photon/issues/11
+    "-Dclojure.tools.logging.factory=clojure.tools.logging.impl/slf4j-factory"
+    "-Dlogback.configurationFile=src/logback.xml"
+    "-XX:-OmitStackTraceInFastThrow" ;; RCF
+    "-XX:+UnlockDiagnosticVMOptions"
+    "-XX:+DebugNonSafepoints"]
+   :exec-fn user/main
+   :exec-args {}}}
+ :jvm-opts ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/slf4j-factory"
+            ;; the following option is required for JDK 16 and 17:
+            "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED"]}
