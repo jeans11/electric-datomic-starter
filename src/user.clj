@@ -24,8 +24,11 @@
 
 (defn main [& args]
   (println "Starting Datomic...")
+  (d/delete-database db-uri)
+  (d/create-database db-uri)
   (alter-var-root #'!conn (constantly (start-datomic!)))
   (alter-var-root #'!tx-queue (constantly (d/tx-report-queue !conn)))
+  @(d/transact !conn app.datomic-contrib/schema)
   (comment (.close !conn))
   (println "Starting Electric compiler...")
   (@shadow-start!) ; serves index.html as well
@@ -35,14 +38,11 @@
   (comment (.stop !electric-server)))
 
 (comment
-  (d/create-database db-uri)
-  (d/delete-database db-uri)
-  @(d/transact !conn app.datomic-contrib/schema)
   (main) ; Electric Clojure(JVM) REPL entrypoint
   (hyperfiddle.rcf/enable!) ; turn on RCF after all transitive deps have loaded
 
   (type !conn)
-  (def db (xt/db !conn))
+  (def db (d/db !conn))
 
   (shadow.cljs.devtools.api/repl :dev) ; shadow server hosts the cljs repl
   ; connect a second REPL instance to it
