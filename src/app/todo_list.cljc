@@ -6,7 +6,7 @@
             [datomic.api #?(:clj :as :cljs :as-alias) d]))
 
 (e/def !conn)
-(e/def db) ; injected database ref; Electric defs are always dynamic
+(e/def db #?(:clj (new (db/latest-db> user/!conn user/!tx-queue)))) ; injected database ref; Electric defs are always dynamic
 
 (e/defn TodoItem [id]
   (e/server
@@ -64,8 +64,7 @@
 
 (e/defn Todo-list []
   (e/server
-   (binding [!conn user/!conn
-             db (new (db/latest-db> user/!conn user/!tx-queue))]
+   (binding [!conn user/!conn]
      (e/client
       (dom/link (dom/props {:rel :stylesheet :href "/todo-list.css"}))
       (dom/h1 (dom/text "minimal todo list"))
