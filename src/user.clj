@@ -16,6 +16,7 @@
   {:host "0.0.0.0", :port 8080, :resources-path "public"})
 
 (def !conn)
+(defonce !db (atom nil))
 (def !tx-queue)
 (def !electric-server)
 
@@ -29,6 +30,14 @@
   (alter-var-root #'!conn (constantly (start-datomic!)))
   (alter-var-root #'!tx-queue (constantly (d/tx-report-queue !conn)))
   @(d/transact !conn app.datomic-contrib/schema)
+  (reset! !db (d/db !conn))
+  ;; datomic tx queue allows only single consumer
+  ;; we spawn a single consumer here and feed the new db into an atom
+  ;; clients can now watch this atom
+  (future (let [q (d/tx-report-queue !conn)]
+            (loop []
+              (reset! !db (:db-after (.take ^java.util.concurrent.LinkedBlockingQueue q)))
+              (recur))))
   (comment (.close !conn))
   (println "Starting Electric compiler...")
   (@shadow-start!) ; serves index.html as well
