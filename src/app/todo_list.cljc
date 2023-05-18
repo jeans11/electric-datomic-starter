@@ -5,8 +5,7 @@
             [hyperfiddle.electric-ui4 :as ui]
             [datomic.api #?(:clj :as :cljs :as-alias) d]))
 
-(e/def !conn)
-(e/def db #?(:clj (new (db/latest-db> user/!conn user/!tx-queue)))) ; injected database ref; Electric defs are always dynamic
+(e/def db)
 
 (e/defn TodoItem [id]
   (e/server
@@ -19,7 +18,7 @@
         (e/fn [v]
           (e/server
            (e/discard
-            @(d/transact !conn [{:db/id id
+            @(d/transact user/!conn [{:db/id id
                                  :task/description (:task/description e) ; repeat
                                  :task/status (if v "done" "active")}]))))
         (dom/props {:id id}))
@@ -39,7 +38,7 @@
    (InputSubmit. (e/fn [v]
                    (e/server
                     (e/discard
-                     @(d/transact !conn [{:task/description v
+                     @(d/transact user/!conn [{:task/description v
                                           :task/status "active"}])))))))
 
 #?(:clj
@@ -64,7 +63,7 @@
 
 (e/defn Todo-list []
   (e/server
-   (binding [!conn user/!conn]
+    (binding [db (e/watch user/!db)]
      (e/client
       (dom/link (dom/props {:rel :stylesheet :href "/todo-list.css"}))
       (dom/h1 (dom/text "minimal todo list"))
